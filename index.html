@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gavin S - Game Dev & Cat Lover</title>
+    <style>
+        /* ============================
+           CORE PORTFOLIO STYLES 
+           ============================ */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --bg-dark: #0f0f1a;
+            --card-bg: #1a1a2e;
+            --text-main: #ffffff;
+            --text-secondary: #b0b0d0;
+            --font-stack: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px 10px;
+            overflow-x: hidden;
+        }
+
+        /* 3JS BACKGROUND CANVAS */
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; opacity: 0.6;
+        }
+
+        /* TOP RIGHT NAVIGATION BUTTONS */
+        .top-nav {
+            position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 100;
+        }
+
+        .nav-btn {
+            background: rgba(15, 15, 26, 0.8); color: var(--neon-blue);
+            border: 2px solid var(--neon-blue); padding: 8px 16px; border-radius: 8px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; font-size: 14px;
+        }
+
+        .nav-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
+        
+        /* Special style for Space Cat button */
+        .nav-btn.cat-btn { color: var(--neon-pink); border-color: var(--neon-pink); }
+        .nav-btn.cat-btn:hover { background: var(--neon-pink); color: #fff; box-shadow: 0 0 15px var(--neon-pink); }
+        
+        .nav-btn.active { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
+
+        /* BACK BUTTON (For Cube Mode) */
+        #back-btn {
+            position: fixed; top: 20px; left: 20px; display: none; z-index: 200;
+            background: rgba(0,0,0,0.8); color: white; border: 2px solid white;
+            padding: 10px 20px; font-size: 18px; border-radius: 30px; cursor: pointer;
+        }
+        #back-btn:hover { background: white; color: black; }
+
+        .container {
+            max-width: 800px; margin: 50px auto 0 auto; position: relative; z-index: 1;
+        }
+
+        /* CARD STYLING */
+        .card {
+            background: rgba(26, 26, 46, 0.95); border-radius: 12px;
+            border: 1px solid rgba(0, 243, 255, 0.1); margin-bottom: 20px;
+            overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); border-color: var(--neon-pink); }
+        .card-content { padding: 24px; }
+
+        /* HEADER & PROFILE */
+        .header-card { text-align: center; }
+        .banner { height: 160px; background: linear-gradient(135deg, #2a004e 0%, #ff0099 100%); width: 100%; }
+        .profile-pic-container { margin-top: -75px; display: flex; justify-content: center; }
+        .profile-initials {
+            width: 150px; height: 150px; background-color: #000;
+            border: 4px solid var(--neon-blue); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 80px; background-image: linear-gradient(to bottom right, #333, #000);
+            box-shadow: 0 0 20px var(--neon-blue);
+        }
+        .header-info h1 {
+            font-size: 32px; font-weight: 700; margin-top: 15px; margin-bottom: 5px;
+            background: -webkit-linear-gradient(var(--neon-blue), var(--neon-pink));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .headline { font-size: 18px; margin-bottom: 8px; }
+        .location-contact { font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; }
+        .location-contact a { color: var(--neon-blue); text-decoration: none; }
+        
+        .btn-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #ff00cc, #333399); color: white;
+            padding: 10px 24px; border-radius: 30px; font-weight: 600; text-decoration: none;
+            font-size: 16px; border: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 10px rgba(255, 0, 204, 0.4);
+        }
+        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 0, 204, 0.7); }
+        
+        .btn-cube {
+            background: linear-gradient(90deg, #00f3ff, #0066ff); color: #000;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+        }
+        
+        /* GENERAL STYLES */
+        .section-title { font-size: 22px; font-weight: 700; margin-bottom: 16px; color: var(--neon-blue); }
+        .item { margin-bottom: 20px; border-left: 2px solid var(--neon-pink); padding-left: 15px; }
+        
+        /* SKILLS BUTTONS */
+        .skills-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        
+        .skill-tag {
+            background: rgba(255, 255, 255, 0.05); border: 2px solid var(--neon-blue);
+            padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600;
+            color: var(--neon-blue); cursor: pointer; transition: 0.2s;
+            user-select: none;
+        }
+        .skill-tag:hover {
+            background: var(--neon-blue); color: #000;
+            box-shadow: 0 0 15px var(--neon-blue); transform: scale(1.1);
+        }
+        .skill-tag:active { transform: scale(0.95); }
+
+        .emoji-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 15px;
+            text-align: center; margin-top: 20px;
+        }
+        .emoji-item {
+            font-size: 40px; cursor: pointer; transition: transform 0.2s; padding: 10px;
+            background: rgba(255,255,255,0.05); border-radius: 10px;
+        }
+        .emoji-item:hover { transform: scale(1.4); background: rgba(255, 0, 204, 0.2); }
+
+        /* SPACE CAT SECTION STYLES */
+        .space-cat-img {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 15px;
+            border: 3px solid var(--neon-pink);
+            box-shadow: 0 0 30px var(--neon-pink);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        .space-cat-img:hover {
+            transform: scale(1.02);
+        }
+        
+        audio {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 10px;
+            border-radius: 30px;
+            box-shadow: 0 0 15px rgba(255, 0, 204, 0.3);
+        }
+
+        /* HIDE PAGES INITIALLY */
+        #page-2, #space-cat-section { display: none; }
+
+        @media (max-width: 600px) {
+            .top-nav { width: 100%; justify-content: center; top: 10px; right: 0; }
+            .container { margin-top: 60px; }
+        }
+    </style>
+    
+    <!-- Load Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <!-- 3D BACKGROUND -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- NAVIGATION -->
+    <div class="top-nav">
+        <button id="btn-p1" class="nav-btn active" onclick="showPage(1)">Page 1</button>
+        <button id="btn-p2" class="nav-btn" onclick="showPage(2)">Page 2</button>
+        <button id="btn-cat" class="nav-btn cat-btn" onclick="showPage(3)">Space Cat</button>
+    </div>
+
+    <!-- BACK BUTTON FOR CUBE MODE -->
+    <button id="back-btn" onclick="toggleCubeMode(false)">⬅ Back</button>
+
+    <!-- PORTFOLIO CONTAINER -->
+    <div class="container">
+        
+        <!-- PAGE 1: RESUME -->
+        <div id="page-1">
+            <div class="card header-card">
+                <div class="banner"></div>
+                <div class="profile-pic-container"><div class="profile-initials">🐱</div></div>
+                <div class="header-info">
+                    <h1>Gavin S</h1>
+                    <p class="headline">🎮 Game Maker | 💻 IT Student | 🐈 Cat Enthusiast</p>
+                    <p class="location-contact">🇺🇸 USA • <a href="mailto:Turbocat7613@gmail.com">Turbocat7613@gmail.com</a></p>
+                    <div class="btn-container">
+                        <a href="https://www.youtube.com/@Turbocat76" target="_blank" class="btn-primary">📺 View YouTube Channel</a>
+                        <button class="btn-primary btn-cube" onclick="toggleCubeMode(true)">🧊 View The Cube</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-content">
+                    <h2 class="section-title">😻 About Me</h2>
+                    <p>I am Gavin and I'm a creative person making amazing games for you! I study coding, math, and I am always learning new things. I'm a quick thinker and I absolutely love animals, especially cats! 🐈‍⬛</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-content">
+                    <h2 class="section-title">⚡ Experience</h2>
+                    <div class="item">
+                        <h4>eBay Sales Specialist</h4>
+                        <p class="sub-title">TeamLegacy Inc.</p>
+                        <p class="date-range">Present</p>
+                        <ul class="item-description">
+                            <li>Managed online inventory and streamlined sales to ensure 5-star customer satisfaction ⭐.</li>
+                            <li>Maintained clear communication with buyers to resolve inquiries quickly.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-content">
+                    <h2 class="section-title">🛠️ Skills (Click for Joke!)</h2>
+                    <div class="skills-grid">
+                        <span class="skill-tag" onclick="tellJoke('python')">🐍 Python</span>
+                        <span class="skill-tag" onclick="tellJoke('html')">🌐 HTML/CSS</span>
+                        <span class="skill-tag" onclick="tellJoke('trouble')">🔧 Troubleshooting</span>
+                        <span class="skill-tag" onclick="tellJoke('game')">🎮 Game Design</span>
+                        <span class="skill-tag" onclick="tellJoke('cat')">🐈 Cat Whisperer</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 2: FAVORITE EMOJIS -->
+        <div id="page-2">
+            <div class="card">
+                <div class="card-content">
+                    <h2 class="section-title">✨ Favorite Emojis</h2>
+                    <div class="emoji-grid">
+                        <div class="emoji-item">🐺</div><div class="emoji-item">🐱</div><div class="emoji-item">🐯</div>
+                        <div class="emoji-item">🦄</div><div class="emoji-item">🦈</div><div class="emoji-item">🦖</div>
+                        <div class="emoji-item">🍕</div><div class="emoji-item">🍔</div><div class="emoji-item">🍟</div>
+                        <div class="emoji-item">🍩</div><div class="emoji-item">🍪</div><div class="emoji-item">✨</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 3: SPACE CAT (MUSIC & PICTURE ONLY) -->
+        <div id="space-cat-section">
+            <div class="card">
+                <div class="card-content" style="text-align: center; padding: 40px;">
+                    <h2 class="section-title" style="justify-content: center; margin-bottom: 25px;">🚀 SPACE CAT BASE</h2>
+                    
+                    <!-- WEB IMAGE OF GALAXY CAT -->
+                    <img src="https://cdn.pixabay.com/photo/2017/02/20/18/03/cat-2083492_960_720.jpg" alt="Space Cat" class="space-cat-img">
+                    
+                    <p style="margin-bottom: 10px; font-weight: bold; color: var(--neon-blue); font-size: 18px;">🎵 Vibe to the Beat:</p>
+                    
+                    <!-- WEB AUDIO OF CHILL BEAT -->
+                    <audio controls>
+                        <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/WFMU/Broke_For_Free/Directionless_EP/Broke_For_Free_-_01_-_Night_Owl.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MAIN SCRIPTS -->
+    <script>
+        // THREE.JS SETUP
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#bg-canvas'), alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        function createCatTexture() {
+            const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#ff00ff'; ctx.fillRect(0,0,256,256);
+            ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 20; ctx.strokeRect(0,0,256,256);
+            ctx.font = '150px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🐱', 128, 128);
+            return new THREE.CanvasTexture(c);
+        }
+        const cube = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ map: createCatTexture() }));
+        scene.add(cube); camera.position.z = 2.5;
+
+        function animateBg() {
+            requestAnimationFrame(animateBg);
+            cube.rotation.x += 0.01; cube.rotation.y += 0.01;
+            cube.position.y = Math.sin(Date.now() * 0.002) * 0.2;
+            renderer.render(scene, camera);
+        }
+        animateBg();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // NAVIGATION LOGIC
+        function showPage(n) {
+            document.getElementById('page-1').style.display = 'none';
+            document.getElementById('page-2').style.display = 'none';
+            document.getElementById('space-cat-section').style.display = 'none';
+            document.getElementById('btn-p1').classList.remove('active');
+            document.getElementById('btn-p2').classList.remove('active');
+            document.getElementById('btn-cat').classList.remove('active');
+
+            if(n===1) { 
+                document.getElementById('page-1').style.display='block'; 
+                document.getElementById('btn-p1').classList.add('active'); 
+            }
+            if(n===2) { 
+                document.getElementById('page-2').style.display='block'; 
+                document.getElementById('btn-p2').classList.add('active'); 
+            }
+            if(n===3) { 
+                document.getElementById('space-cat-section').style.display='block'; 
+                document.getElementById('btn-cat').classList.add('active'); 
+            }
+        }
+
+        function toggleCubeMode(enable) {
+            document.querySelector('.container').style.display = enable ? 'none' : 'block';
+            document.querySelector('.top-nav').style.display = enable ? 'none' : 'flex';
+            document.getElementById('back-btn').style.display = enable ? 'block' : 'none';
+        }
+
+        // ============================
+        // SKILL BUTTON JOKES
+        // ============================
+        function tellJoke(skill) {
+            let joke = "";
+            if (skill === 'python') {
+                joke = "Knock knock.\nWho's there?\nSnake.\nSnake who?\nSnake your time, the code is compiling! 🐍";
+            } else if (skill === 'html') {
+                joke = "Knock knock.\nWho's there?\nStyle.\nStyle who?\nStyle loving this website? 🎨";
+            } else if (skill === 'trouble') {
+                joke = "Knock knock.\nWho's there?\nError.\nError who?\nError 404: Joke not found! ⚠️";
+            } else if (skill === 'game') {
+                joke = "Knock knock.\nWho's there?\nLevel.\nLevel who?\nLevel up and let me in! 🎮";
+            } else if (skill === 'cat') {
+                joke = "Knock knock.\nWho's there?\nKitten.\nKitten who?\nQuit kitten around and open the door! 😺";
+            }
+            alert(joke);
+        }
+    </script>
+</body>
+</html>
